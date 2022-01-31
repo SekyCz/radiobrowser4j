@@ -28,7 +28,7 @@ import java.util.Collections;
  * */
 @Slf4j
 @ToString
-public final class ListParameter {
+public final class OrderParameter {
     /** The field name to sort by. */
     @Getter
     private FieldName order;
@@ -40,21 +40,36 @@ public final class ListParameter {
     /** Private constructor.
      * @see #create()
      * */
-    private ListParameter() {
+    private OrderParameter() {
+    }
+
+    /** Private constructor.
+     * @see #create()
+     * */
+    private OrderParameter(@NonNull final FieldName fieldName) {
+        this.order = fieldName;
     }
 
     /** Creates a new instance.
      * @return a new instance.
      * */
-    public static ListParameter create() {
-        return new ListParameter();
+    public static OrderParameter create() {
+        return new OrderParameter();
+    }
+
+
+    /** Creates a new instance.
+     * @return a new instance.
+     * */
+    public static OrderParameter create(@NonNull final FieldName fieldName) {
+        return new OrderParameter(fieldName);
     }
 
     /** Order by the given field name.
      * @param fieldName the field name to order by.
      * @return {@code this} instance.
      * */
-    public ListParameter order(@NonNull final FieldName fieldName) {
+    public OrderParameter order(@NonNull final FieldName fieldName) {
         this.order = fieldName;
         return this;
     }
@@ -63,7 +78,7 @@ public final class ListParameter {
      * @param reverse whether to order reverse.
      * @return {@code this} instance.
      * */
-    public ListParameter reverseOrder(final boolean reverse) {
+    public OrderParameter reverseOrder(final boolean reverse) {
         this.reverseOrder = reverse;
         return this;
     }

@@ -21,12 +21,19 @@ package de.sfuhrm.radiobrowser4j;
  * @author Tomas Sekera
  */
 public enum SearchKey {
+    /**
+     * The station name.
+     *
+     * @see Station#getName()
+     */
+    NAME,
 
     /**
      * The station tags.
      *
      * @see Station#getTagList()
      */
+
     TAG,
     /**
      * The station country code.

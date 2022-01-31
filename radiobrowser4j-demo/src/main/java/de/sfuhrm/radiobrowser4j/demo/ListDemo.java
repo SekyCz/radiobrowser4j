@@ -15,9 +15,7 @@
 */
 package de.sfuhrm.radiobrowser4j.demo;
 
-import de.sfuhrm.radiobrowser4j.FieldName;
-import de.sfuhrm.radiobrowser4j.ListParameter;
-import de.sfuhrm.radiobrowser4j.RadioBrowser;
+import de.sfuhrm.radiobrowser4j.*;
 
 /** List all radio stations.
  * @author Stephan Fuhrmann
@@ -42,9 +40,8 @@ public final class ListDemo {
         RadioBrowser radioBrowser = new RadioBrowser(
                 TIMEOUT_DEFAULT,
                 "https://github.com/sfuhrm/radiobrowser4j");
-        radioBrowser
-                .listStations(ListParameter.create().order(FieldName.NAME))
-                .limit(LIMIT_DEFAULT)
+        radioBrowser.listStationsBy(SearchMode.SEARCH, SearchParameter.create(SearchKey.COUNTRYCODE, "cz"))
+                .limit(5)
                 .forEach(s -> System.out.printf("%s: %s%n",
                         s.getName(), s.getUrl()
                         ));

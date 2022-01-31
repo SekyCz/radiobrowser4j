@@ -159,7 +159,7 @@ public class RadioBrowserTest {
     @Test
     public void listStationsWithStreamAndOrder() {
         List<Station> stations = browser
-                .listStations(ListParameter.create().order(FieldName.LASTCHECKTIME))
+                .listStations(OrderParameter.create(FieldName.LASTCHECKTIME))
                 .limit(256)
                 .collect(Collectors.toList());
 
