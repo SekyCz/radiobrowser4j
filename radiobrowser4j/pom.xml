@@ -8,6 +8,13 @@
     <version>2.2.4-SNAPSHOT</version>
   </parent>
 
+  <repositories>
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
+
   <artifactId>radiobrowser4j</artifactId>
   <packaging>jar</packaging>
 
