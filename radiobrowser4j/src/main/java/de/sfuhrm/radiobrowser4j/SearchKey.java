@@ -22,6 +22,13 @@ package de.sfuhrm.radiobrowser4j;
  */
 public enum SearchKey {
     /**
+     * To not list broken station.
+     *
+     * @implNote default (false), values: true / false
+     */
+    HIDEBROKEN,
+
+    /**
      * The station name.
      *
      * @see Station#getName()
@@ -33,8 +40,15 @@ public enum SearchKey {
      *
      * @see Station#getTagList()
      */
-
     TAG,
+
+    /**
+     * The station country.
+     *
+     * @see Station#getCountry()
+     */
+    COUNTRY,
+
     /**
      * The station country code.
      *
@@ -42,4 +56,10 @@ public enum SearchKey {
      */
     COUNTRYCODE,
 
+    /**
+     * The station state.
+     *
+     * @see Station#getState()
+     */
+    STATE
 }
