@@ -189,6 +189,47 @@ public final class RadioBrowser {
         }
     }
 
+
+    /**
+     * Retrieve a generic list containing a value/stationcount mapping.
+     *
+     * @param subPath the API sub path to use for the call.
+     * @return map of value and stationcount pairs.
+     */
+    private Map<String, Integer> retrieveValueStationCountListOrdered(
+            final String subPath,
+            int limit) {
+        MultivaluedMap<String, String> requestParams =
+                new MultivaluedHashMap<>();
+
+        Entity<Form> entity = Entity.form(requestParams);
+
+        requestParams.put("limit", Collections.singletonList(
+                Integer.toString(limit)));
+        requestParams.put("order",
+                Collections.singletonList("stationcount"));
+        requestParams.put("reverse",
+                Collections.singletonList("true"));
+
+        Response response = null;
+        try {
+            WebTarget target = webTarget.path(subPath);
+            response = builder(target)
+                    .post(entity);
+
+            List<Map<String, String>> map = response.readEntity(
+                    new GenericType<List<Map<String, String>>>() {
+                    });
+            checkResponseStatus(response);
+            return map.stream()
+                    .collect(Collectors.toMap(
+                            m -> m.get("name"),
+                            m -> Integer.parseInt(m.get("stationcount"))));
+        } finally {
+            close(response);
+        }
+    }
+
     /**
      * List the known countries.
      *
@@ -198,6 +239,18 @@ public final class RadioBrowser {
      */
     public Map<String, Integer> listCountries() {
         return retrieveValueStationCountList("json/countries");
+    }
+
+    /**
+     * List the known countries ordered by station count in descending order.
+     *
+     * @param limit the maximum number of results
+     * @return a list of countries (keys) and country usages (values).
+     * @see <a href="https://de1.api.radio-browser.info/#List_of_countries">
+     * API</a>
+     */
+    public Map<String, Integer> listCountries(int limit) {
+        return retrieveValueStationCountListOrdered("json/countries", limit);
     }
 
     /**
@@ -242,6 +295,17 @@ public final class RadioBrowser {
      */
     public Map<String, Integer> listTags() {
         return retrieveValueStationCountList("json/tags");
+    }
+
+    /**
+     * List the known tags.
+     *
+     * @return a list of tags (keys) and tag usages (values).
+     * @see <a href="https://de1.api.radio-browser.info/#List_of_tags">
+     * API</a>
+     */
+    public Map<String, Integer> listTags(int limit) {
+        return retrieveValueStationCountListOrdered("json/tags", limit);
     }
 
 
@@ -635,11 +699,11 @@ public final class RadioBrowser {
 
     /**
      * Get a stream of stations matching an advanced search criteria.
-     *
+     * <p>
      * By default, ordering is from the most clicked radios.
      *
-     * @param searchMode     the field to match.
-     * @param searchParam    the optional search parameters.
+     * @param searchMode  the field to match.
+     * @param searchParam the optional search parameters.
      * @return the full stream of matching stations.
      */
     public Stream<Station> listStationsBy(
