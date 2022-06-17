@@ -28,11 +28,15 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
-
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -205,7 +209,7 @@ public final class RadioBrowser {
      * Retrieve a generic list containing a value/stationcount mapping.
      *
      * @param subPath the API sub path to use for the call.
-     * @param limit count of results
+     * @param limit   count of results
      * @return map of value and stationcount pairs.
      */
     private Map<String, Integer> retrieveValueStationCountListOrdered(
