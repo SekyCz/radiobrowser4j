@@ -188,7 +188,8 @@ public final class RadioBrowser {
             return map.stream()
                     .collect(Collectors.toMap(
                             m -> m.get("name"),
-                            m -> Integer.parseInt(m.get("stationcount"))));
+                            m -> Integer.parseInt(m.get("stationcount")),
+                            (m1, m2) -> m1));
         } finally {
             close(response);
         }
@@ -229,7 +230,8 @@ public final class RadioBrowser {
             return map.stream()
                     .collect(Collectors.toMap(
                             m -> m.get("name"),
-                            m -> Integer.parseInt(m.get("stationcount"))));
+                            m -> Integer.parseInt(m.get("stationcount")),
+                            (m1, m2) -> m1));
         } finally {
             close(response);
         }
