@@ -15,6 +15,8 @@
  */
 package de.sfuhrm.radiobrowser4j;
 
+import jakarta.ws.rs.client.*;
+import jakarta.ws.rs.core.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -195,7 +197,6 @@ public final class RadioBrowser {
         }
     }
 
-
     /**
      * Retrieve a generic list containing a value/stationcount mapping.
      *
@@ -237,6 +238,9 @@ public final class RadioBrowser {
         }
     }
 
+    /**
+     * List the known countries.
+     *
     /**
      * List the known countries.
      *
