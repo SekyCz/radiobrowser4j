@@ -15,8 +15,6 @@
  */
 package de.sfuhrm.radiobrowser4j;
 
-import jakarta.ws.rs.client.*;
-import jakarta.ws.rs.core.*;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,6 +28,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
+
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -67,17 +66,18 @@ public final class RadioBrowser {
 
     /**
      * Creates a new API client.
-     * @param apiUrl the base URL of the API.
-     *               Can be determined by
-     *               {@linkplain  EndpointDiscovery#discover()}
-     *               or set to {@linkplain #DEFAULT_API_URL}.
-     * @param timeout the timeout in milliseconds for connecting
-     *                and reading.
+     *
+     * @param apiUrl      the base URL of the API.
+     *                    Can be determined by
+     *                    {@linkplain  EndpointDiscovery#discover()}
+     *                    or set to {@linkplain #DEFAULT_API_URL}.
+     * @param timeout     the timeout in milliseconds for connecting
+     *                    and reading.
      * @param myUserAgent the user agent string to use.
      *                    Please use a user agent string that somehow
      *                    points to your github project, home page,
      *                    or what ever.
-     * */
+     */
     public RadioBrowser(@NonNull final String apiUrl,
                         final int timeout,
                         @NonNull final String myUserAgent) {
@@ -86,19 +86,20 @@ public final class RadioBrowser {
 
     /**
      * Creates a new API client.
-     * @param apiUrl the base URL of the API. Can be determined
-     *               by {@linkplain  EndpointDiscovery#discover()}
-     *               or set to {@linkplain #DEFAULT_API_URL}.
-     * @param timeout the timeout in milliseconds for connecting
-     *                and reading.
-     * @param myUserAgent the user agent string to use.
-     *                    Please use a user agent string that somehow
-     *                    points to your github project,
-     *                    home page, or what ever.
-     * @param proxyUri optional URI of the proxy server, or {@code null}
-     *                 if no proxy is required.
-     * @param proxyUser optional username to authenticate
-     *                  with if using a proxy.
+     *
+     * @param apiUrl        the base URL of the API. Can be determined
+     *                      by {@linkplain  EndpointDiscovery#discover()}
+     *                      or set to {@linkplain #DEFAULT_API_URL}.
+     * @param timeout       the timeout in milliseconds for connecting
+     *                      and reading.
+     * @param myUserAgent   the user agent string to use.
+     *                      Please use a user agent string that somehow
+     *                      points to your github project,
+     *                      home page, or what ever.
+     * @param proxyUri      optional URI of the proxy server, or {@code null}
+     *                      if no proxy is required.
+     * @param proxyUser     optional username to authenticate
+     *                      with if using a proxy.
      * @param proxyPassword optional password to authenticate
      *                      with if using a proxy
      */
@@ -125,7 +126,8 @@ public final class RadioBrowser {
     /**
      * Creates a new API client.
      *
-     * @param timeout     the timeout for connect and read requests in milliseconds.
+     * @param timeout     the timeout for connect and read requests
+     *                    in milliseconds.
      *                    Must be greater than zero.
      * @param myUserAgent the user agent String for your user agent.
      *                    Please use a user agent string that somehow
@@ -144,7 +146,7 @@ public final class RadioBrowser {
      *
      * @param in the web target to create a builder from.
      * @return an invocation builder that is built from the web target.
-     * */
+     */
     private Invocation.Builder builder(final WebTarget in) {
         return in.request(MediaType.APPLICATION_JSON_TYPE)
                 .accept(MediaType.APPLICATION_JSON_TYPE)
@@ -153,11 +155,13 @@ public final class RadioBrowser {
 
     /**
      * Transfer the paging parameters to the passed multi-valued-map.
-     * @param paging the source of the paging params.
+     *
+     * @param paging        the source of the paging params.
      * @param requestParams the target of the paging params.
      */
     private static void applyPaging(@NonNull final Paging paging,
-                                    final MultivaluedMap<String, String> requestParams) {
+                                    final MultivaluedMap<String, String>
+                                            requestParams) {
         log.info("paging={}", paging);
         requestParams.put("limit", Collections.singletonList(
                 Integer.toString(paging.getLimit())));
@@ -201,6 +205,7 @@ public final class RadioBrowser {
      * Retrieve a generic list containing a value/stationcount mapping.
      *
      * @param subPath the API sub path to use for the call.
+     * @param limit count of results
      * @return map of value and stationcount pairs.
      */
     private Map<String, Integer> retrieveValueStationCountListOrdered(
@@ -240,8 +245,8 @@ public final class RadioBrowser {
 
     /**
      * List the known countries.
-     *
-    /**
+     * <p>
+     * /**
      * List the known countries.
      *
      * @return a list of countries (keys) and country usages (values).
@@ -402,8 +407,10 @@ public final class RadioBrowser {
                 listParam);
     }
 
-    /** Get a list of all stations. Will return all
+    /**
+     * Get a list of all stations. Will return all
      * stations in a stream.
+     *
      * @param listParam the optional listing parameters.
      * @return the full stream of stations.
      */
@@ -718,7 +725,9 @@ public final class RadioBrowser {
     public Stream<Station> listStationsBy(
             @NonNull final SearchMode searchMode,
             final SearchParameter... searchParam) {
-        return listStationsBy(searchMode, OrderParameter.create(FieldName.CLICKCOUNT).reverseOrder(true), searchParam);
+        return listStationsBy(searchMode,
+                OrderParameter.create(FieldName.CLICKCOUNT).reverseOrder(true),
+                searchParam);
     }
 
     /**
@@ -801,7 +810,7 @@ public final class RadioBrowser {
      * name, url, homepage, favicon, country, state, language and tags.
      *
      * @param station the station to add to the REST service.
-     * @param path the path of the new / edit call.
+     * @param path    the path of the new / edit call.
      * @return the {@linkplain Station#getStationUUID() id} of the new station.
      * @throws RadioBrowserException if there was a problem
      *                               creating the station.
@@ -841,9 +850,9 @@ public final class RadioBrowser {
      * Transfers all parameters for a new station to the given target params.
      *
      * @param sourceStation the station to get fields from.
-     * @param targetParams the target multi-valued-map to write the
-     *                     request params to.
-     * */
+     * @param targetParams  the target multi-valued-map to write the
+     *                      request params to.
+     */
     private static void transferToMultivaluedMap(final Station sourceStation,
                                                  final MultivaluedMap<String, String> targetParams) {
         targetParams.put("name",
