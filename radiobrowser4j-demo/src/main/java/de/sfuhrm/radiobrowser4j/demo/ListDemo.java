@@ -15,7 +15,13 @@
 */
 package de.sfuhrm.radiobrowser4j.demo;
 
-import de.sfuhrm.radiobrowser4j.*;
+import de.sfuhrm.radiobrowser4j.EndpointDiscovery;
+import de.sfuhrm.radiobrowser4j.FieldName;
+import de.sfuhrm.radiobrowser4j.ListParameter;
+import de.sfuhrm.radiobrowser4j.RadioBrowser;
+
+import java.io.IOException;
+import java.util.Optional;
 
 /** List all radio stations.
  * @author Stephan Fuhrmann
@@ -35,13 +41,18 @@ public final class ListDemo {
 
     /** Main method.
      * @param args command line arguments.
+     * @throws IOException if endpoint discovery fails.
      * */
-    public static void main(final String...args) {
+    public static void main(final String...args) throws IOException {
+        String myAgent = "https://github.com/sfuhrm/radiobrowser4j";
+        Optional<String> endpoint = new EndpointDiscovery(myAgent).discover();
         RadioBrowser radioBrowser = new RadioBrowser(
+                endpoint.get(),
                 TIMEOUT_DEFAULT,
-                "https://github.com/sfuhrm/radiobrowser4j");
-        radioBrowser.listStationsBy(SearchMode.SEARCH, SearchParameter.create(SearchKey.COUNTRYCODE, "cz"))
-                .limit(5)
+                myAgent);
+        radioBrowser
+                .listStations(ListParameter.create().order(FieldName.NAME))
+                .limit(LIMIT_DEFAULT)
                 .forEach(s -> System.out.printf("%s: %s%n",
                         s.getName(), s.getUrl()
                         ));

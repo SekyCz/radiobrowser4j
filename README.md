@@ -1,6 +1,7 @@
 RadioBrowser4j 
 ===================
 [![Java CI](https://github.com/sfuhrm/radiobrowser4j/actions/workflows/maven.yml/badge.svg)](https://github.com/sfuhrm/radiobrowser4j/actions/workflows/maven.yml)
+[![Java Integration](https://github.com/sfuhrm/radiobrowser4j/actions/workflows/maven-integration.yml/badge.svg)](https://github.com/sfuhrm/radiobrowser4j/actions/workflows/maven-integration.yml)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sfuhrm/radiobrowser4j/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sfuhrm/radiobrowser4j)
 [![ReleaseDate](https://img.shields.io/github/release-date/sfuhrm/radiobrowser4j)](https://github.com/sfuhrm/radiobrowser4j/releases)
 [![javadoc](https://javadoc.io/badge2/de.sfuhrm/radiobrowser4j/javadoc.svg)](https://javadoc.io/doc/de.sfuhrm/radiobrowser4j)
@@ -25,7 +26,7 @@ For Maven, you need this dependency:
 <dependency>
     <groupId>de.sfuhrm</groupId>
     <artifactId>radiobrowser4j</artifactId>
-    <version>2.2.3</version>
+    <version>2.5.2</version>
 </dependency>
 ```
 
@@ -49,33 +50,11 @@ documentation to get the full concepts of the API.
 
 ### Gradle for Android targets
 
-Some adjustments are necessary to the packaging of your app build.gradle:
+A list of adjustments for creating an android app with
+radiobrowser4j is listed here: [ANDROID.md](ANDROID.md).
 
-```
-...
-
-android {
-...
-    packagingOptions {
-        exclude 'META-INF/NOTICE.md'
-        exclude 'META-INF/LICENSE.md'
-        exclude 'META-INF/NOTICE.markdown'
-    }
-}
-
-dependencies {
-...
-
-    implementation 'de.sfuhrm:radiobrowser4j:2.2.3';
-}
-```
-
-Add the following statements to the Proguard config
-if you are obfuscating your build:
-
-```
--keep class org.glassfish.hk2.utilities.** { *; } -keep class org.glassfish.jersey.** { *; } -keep class org.jvnet.hk2.internal.** { *; } -keep class de.sfuhrm.radiobrowser4j.** { *; }
-```
+For more details, please see 
+[issue 14](https://github.com/sfuhrm/radiobrowser4j/issues/14).
 
 ### More examples
 
@@ -93,6 +72,38 @@ located in the test resources.
 
 ## Version history
 
+* v2.5.2
+  - Add deprecation warnings for countrycode and countrycodeexact fields as suggested in the upstream API. Countrycode should be used instead which is standardized.
+  - Update of some plugins.
+* v2.5.1
+  - Removed now unnecessary JAXB dependency (was needed by Jersey before)
+  - Updated Jersey dependency from 3.0.8 -> 3.0.11
+  - Changed resource closing to try-with-resources, reducing code 
+* v2.5.0
+  - Added new call listStationsWithAdvancedSearch for creating more complex queries to the API.
+  - Added Station geoLatitude and geoLongitude.
+  - Added the getServerStats call.
+  - Fix: Mapping of now necessary CountryCode was broken.
+  - Fix: Deprecation of the RadioBrowser.DEFAULT_API_URL and the related constructor. The cluster concept of radiobrowser is to rely on DNS roundrobin and probing. The German RadioBrowser.DEFAULT_API_URL returned HTTP 503 today which sucks.
+  - Fix: "Improvable stations" are gone in the REST API, they are now deprecated and return empty lists/streams.
+  - Refactored code to use a common ParameterProvider for mapping parameters to Maps.
+  - Re-created offline wiremock tests
+  - Integration test or real-world tests with real radiobrowser API
+* v2.4.0
+  - Default to GZIP encoding if supported by the server (#27).
+* v2.3.1:
+  - Bugfix when dealing with duplicate data  (fixes #15)
+  - Add special info for  [Android setup](ANDROID.md)
+* v2.2.5:
+  - Update slf4j dependency to 2.0.7.
+  - Update lombok dependency to 1.8.26.
+  - Update log4j dependency to 2.20.0.
+* v2.2.4:
+  - Introduce RestClientFactory to deal at one place with Proxy config.
+  - Update Jersey dependency to 3.0.8.
+  - Update lombok dependency to 1.8.24.
+  - Update log4j dependency to 2.19.0.
+  - Update slf4j dependency to 2.0.3.
 * v2.2.3:
   - Add proxy support for EndpointDiscovery also.
   - Update Jersey dependency to 3.0.4.
