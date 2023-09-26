@@ -25,8 +25,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.*;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.nullValue;
 
 /**
  * Test for the ListParameter class.
@@ -36,49 +38,49 @@ public class ListParameterTest {
 
     @Test
     public void create() {
-        OrderParameter orderParameter = OrderParameter.create();
+        ListParameter orderParameter = ListParameter.create();
 
         assertThat(orderParameter, is(not(nullValue())));
     }
 
     @Test
-    public void applyToWithNothingSet() {
-        OrderParameter orderParameter = OrderParameter.create();
+    public void applyWithNothingSet() {
+        ListParameter orderParameter = ListParameter.create();
         MultivaluedMap<String,String> multivaluedMap = new MultivaluedHashMap<>();
-        orderParameter.applyTo(multivaluedMap);
+        orderParameter.apply(multivaluedMap);
 
         assertThat(multivaluedMap.keySet().toArray(), is(IsArrayWithSize.emptyArray()));
     }
 
     @Test
-    public void applyToWithOrderSet() {
-        OrderParameter orderParameter = OrderParameter.create();
+    public void applyWithOrderSet() {
+        ListParameter orderParameter = ListParameter.create();
         orderParameter.order(FieldName.BITRATE);
         MultivaluedMap<String,String> multivaluedMap = new MultivaluedHashMap<>();
-        orderParameter.applyTo(multivaluedMap);
+        orderParameter.apply(multivaluedMap);
 
         assertThat(multivaluedMap.keySet(),     is(new HashSet<>(Collections.singletonList("order"))));
         assertThat(multivaluedMap.get("order"),  is(Collections.singletonList("bitrate")));
     }
 
     @Test
-    public void applyToWithReverseSet() {
-        OrderParameter orderParameter = OrderParameter.create();
+    public void applyWithReverseSet() {
+        ListParameter orderParameter = ListParameter.create();
         orderParameter.reverseOrder(true);
         MultivaluedMap<String,String> multivaluedMap = new MultivaluedHashMap<>();
-        orderParameter.applyTo(multivaluedMap);
+        orderParameter.apply(multivaluedMap);
 
         assertThat(multivaluedMap.keySet(),     is(new HashSet<>(Collections.singletonList("reverse"))));
         assertThat(multivaluedMap.get("reverse"),  is(Collections.singletonList("true")));
     }
 
     @Test
-    public void applyToWithOrderAndReverseSet() {
-        OrderParameter orderParameter = OrderParameter.create();
+    public void applyWithOrderAndReverseSet() {
+        ListParameter orderParameter = ListParameter.create();
         orderParameter.order(FieldName.CODEC);
         orderParameter.reverseOrder(true);
         MultivaluedMap<String,String> multivaluedMap = new MultivaluedHashMap<>();
-        orderParameter.applyTo(multivaluedMap);
+        orderParameter.apply(multivaluedMap);
 
         assertThat(multivaluedMap.keySet(),     is(new HashSet<>(Arrays.asList("reverse", "order"))));
         assertThat(multivaluedMap.get("reverse"),  is(Collections.singletonList("true")));

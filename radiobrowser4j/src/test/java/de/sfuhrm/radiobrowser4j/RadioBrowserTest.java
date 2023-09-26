@@ -24,8 +24,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.MatcherAssert.*;
-import static org.hamcrest.CoreMatchers.*;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
@@ -35,6 +33,11 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 
 /**
  * Some integration tests.
@@ -159,7 +162,7 @@ public class RadioBrowserTest {
     @Test
     public void listStationsWithStreamAndOrder() {
         List<Station> stations = browser
-                .listStations(OrderParameter.create(FieldName.LASTCHECKTIME))
+                .listStations(ListParameter.create(FieldName.LASTCHECKTIME))
                 .limit(256)
                 .collect(Collectors.toList());
 
