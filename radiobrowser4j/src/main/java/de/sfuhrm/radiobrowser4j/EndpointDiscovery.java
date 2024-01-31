@@ -1,12 +1,11 @@
 package de.sfuhrm.radiobrowser4j;
 
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.Setter;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -21,6 +20,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -47,6 +47,17 @@ public class EndpointDiscovery {
     /** The optional proxy password. */
     private final String proxyPassword;
 
+    /** Helper for resolving DNS addresses.
+     * @see #DNS_API_ADDRESS
+     * */
+    private final InetAddressHelper inetAddressHelper;
+
+    /** Producer or executor services used for discovery.
+     * */
+    @Setter(AccessLevel.PACKAGE)
+    private Supplier<ExecutorService> executorServiceProducer =
+            () -> Executors.newFixedThreadPool(DEFAULT_THREADS);
+
     /** Constructs a new instance.
      * @param myUserAgent the user agent String to use while discovery.
      * */
@@ -66,10 +77,32 @@ public class EndpointDiscovery {
                              final String myProxyUri,
                              final String myProxyUser,
                              final String myProxyPassword) {
+        this(myUserAgent,
+                myProxyUri,
+                myProxyUser,
+                myProxyPassword,
+                new InetAddressHelper());
+    }
+
+    /** Constructs a new instance.
+     * @param myUserAgent the user agent String to use while discovery.
+     * @param myProxyUri the optional URI of a HTTP proxy to use.
+     * @param myProxyUser  the optional username to
+     *                     authenticate with to access the proxy.
+     * @param myProxyPassword the optional password
+     *                        to authenticate with to access the proxy.
+     * @param myInetAddressHelper the internet address resolution helper.
+     * */
+    EndpointDiscovery(@NonNull final String myUserAgent,
+                             final String myProxyUri,
+                             final String myProxyUser,
+                             final String myProxyPassword,
+                             final InetAddressHelper myInetAddressHelper) {
         this.userAgent = myUserAgent;
         this.proxyUri = myProxyUri;
         this.proxyUser = myProxyUser;
         this.proxyPassword = myProxyPassword;
+        this.inetAddressHelper = myInetAddressHelper;
     }
 
     /** Get the URLs of all API endpoints that are returned by the DNS service.
@@ -79,7 +112,8 @@ public class EndpointDiscovery {
      * API DNS name.
      * */
     List<String> apiUrls() throws UnknownHostException {
-        InetAddress[] addresses = InetAddress.getAllByName(DNS_API_ADDRESS);
+        InetAddress[] addresses =
+                inetAddressHelper.getAllByName(DNS_API_ADDRESS);
         List<String> fqdns = new ArrayList<>();
         for (InetAddress inetAddress : addresses) {
             fqdns.add(inetAddress.getCanonicalHostName());
@@ -98,11 +132,11 @@ public class EndpointDiscovery {
     @Value
     static class DiscoveryResult {
         /** The endpoint address for this result. */
-        private String endpoint;
+        String endpoint;
         /** The connection and retrieval duration in milliseconds. */
-        private long duration;
+        long duration;
         /** The stats read from the endpoint. */
-        private Stats stats;
+        Stats stats;
     }
 
     /**
@@ -112,8 +146,7 @@ public class EndpointDiscovery {
      * Unreachable endpoints are not returned.
      * */
     List<DiscoveryResult> discoverApiUrls(final List<String> apiUrls) {
-        ExecutorService executorService =
-                Executors.newFixedThreadPool(DEFAULT_THREADS);
+        ExecutorService executorService = executorServiceProducer.get();
 
         try {
             List<Future<DiscoveryResult>> futureList = new ArrayList<>();
@@ -121,7 +154,16 @@ public class EndpointDiscovery {
                 Callable<DiscoveryResult> discoveryResultCallable = () -> {
                     long start = System.currentTimeMillis();
                     log.debug("Starting check for {}", apiUrl);
-                    Stats stats = getStats(apiUrl, DEFAULT_TIMEOUT_MILLIS);
+                    RadioBrowser radioBrowser = new RadioBrowser(
+                            ConnectionParams.builder()
+                                    .apiUrl(apiUrl)
+                                    .timeout(DEFAULT_TIMEOUT_MILLIS)
+                                    .userAgent(userAgent)
+                                    .proxyUri(proxyUri)
+                                    .proxyUser(proxyUser)
+                                    .proxyPassword(proxyPassword)
+                                    .build());
+                    Stats stats = radioBrowser.getServerStats();
                     long duration = System.currentTimeMillis() - start;
                     log.debug("Finished check for {}, took {} ms",
                             apiUrl, duration);
@@ -149,30 +191,6 @@ public class EndpointDiscovery {
         } finally {
             executorService.shutdown();
         }
-    }
-
-    /** Get the stats for a specific API endpoint.
-     * @param endpoint the API endpoint URI.
-     * @param timeout the timeout in millis.
-     * @return the stats object from the server.
-     */
-    Stats getStats(final String endpoint, final int timeout) {
-        if (timeout <= 0) {
-            throw new IllegalArgumentException(
-                    "timeout must be > 0, but is "
-                            + timeout);
-        }
-
-        Client client = RestClientFactory.newClient(timeout,
-                proxyUri,
-                proxyUser,
-                proxyPassword);
-        WebTarget webTarget = client.target(endpoint);
-        return webTarget.path("json/stats")
-                .request(MediaType.APPLICATION_JSON_TYPE)
-                .accept(MediaType.APPLICATION_JSON_TYPE)
-                .header("User-Agent", userAgent)
-                .get(Stats.class);
     }
 
     /** Discovers the best performing endpoint.

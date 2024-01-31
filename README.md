@@ -2,6 +2,7 @@ RadioBrowser4j
 ===================
 [![Java CI](https://github.com/sfuhrm/radiobrowser4j/actions/workflows/maven.yml/badge.svg)](https://github.com/sfuhrm/radiobrowser4j/actions/workflows/maven.yml)
 [![Java Integration](https://github.com/sfuhrm/radiobrowser4j/actions/workflows/maven-integration.yml/badge.svg)](https://github.com/sfuhrm/radiobrowser4j/actions/workflows/maven-integration.yml)
+[![Coverage](https://raw.githubusercontent.com/sfuhrm/radiobrowser4j/gh-pages/jacoco.svg)]() 
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.sfuhrm/radiobrowser4j/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.sfuhrm/radiobrowser4j)
 [![ReleaseDate](https://img.shields.io/github/release-date/sfuhrm/radiobrowser4j)](https://github.com/sfuhrm/radiobrowser4j/releases)
 [![javadoc](https://javadoc.io/badge2/de.sfuhrm/radiobrowser4j/javadoc.svg)](https://javadoc.io/doc/de.sfuhrm/radiobrowser4j)
@@ -26,18 +27,39 @@ For Maven, you need this dependency:
 <dependency>
     <groupId>de.sfuhrm</groupId>
     <artifactId>radiobrowser4j</artifactId>
-    <version>2.5.2</version>
+    <version>2.6.0</version>
 </dependency>
 ```
 
-After adding this dependency, you can start
+### Use within Android projects
+
+The library works well with Android projects simply by referencing the library within the build.gradle
+
+```gradle
+    implementation 'de.sfuhrm:radiobrowser4j:3.0.0'
+```
+
+If Proguard or R8 code shrinking and obfuscation is being used, then the following entries should be added to the Proguard configuration file (usually proguard-rules.pro):
+
+```
+-dontwarn lombok**
+-keep class de.sfuhrm.radiobrowser4j.** { *; }
+```
+### Java use
+
+After adding the dependency, you can start
 by creating one instance and using it
 
 ```java
-// 5000ms timeout, user agent is Demo agent/1.0
-RadioBrowser browser = new RadioBrowser(5000, "Demo agent/1.0");
-// print the first 64 stations in station name order
-browser.listStations(ListParameter.create().order(FieldName.name))
+// discover endpoint
+Optional<String> endpoint = new EndpointDiscovery(myAgent).discover();
+
+// build instance
+RadioBrowser radioBrowser = new RadioBrowser(
+    ConnectionParams.builder().apiUrl(endpoint.get()).userAgent("Demo agent/1.0").timeout(5000).build());
+
+// list stations
+radioBrowser.listStations(ListParameter.create().order(FieldName.name))
     .limit(64)
     .forEach(s -> System.out.printf("%s: %s%n",
         s.getName(),
@@ -47,14 +69,6 @@ browser.listStations(ListParameter.create().order(FieldName.name))
 
 You can take a look at the [javadoc](https://javadoc.io/doc/de.sfuhrm/radiobrowser4j)
 documentation to get the full concepts of the API.
-
-### Gradle for Android targets
-
-A list of adjustments for creating an android app with
-radiobrowser4j is listed here: [ANDROID.md](ANDROID.md).
-
-For more details, please see 
-[issue 14](https://github.com/sfuhrm/radiobrowser4j/issues/14).
 
 ### More examples
 
@@ -69,9 +83,25 @@ The API is tested using the [WireMock](http://wiremock.org/) REST testing
 framework. Mocked web requests/responses are
 located in the test resources.
 
-
 ## Version history
 
+* v3.0.0
+  - Replacement of JAX-RS / Jersey with more lightweight URLConnection / GSon.
+    Will make Android usage work out of the box.
+  - Removed deprecations (Station country, deprecated constructors).
+  - Introduced new ConnectionParams object.
+  - Introduced retry mechnism (see ConnectionParams).
+* v2.6.0
+  - Refactorings for reducing code duplication.
+  - Major refactorings to limit the JAX-RS / Jersey exposure of the code to a minimum of classes. This is a preparation for possible alternative implementations (see issue #14 ).
+  - Freed the Station class from Jackson annotations (replacing with a mixin class).
+  - Migrate from JMockit to Mockito since JMockit is conflicting in Java 21.
+  - Building with JDK 21 now (still targeting JDK 8) since Mockito is needing this.
+  - Migrate JUnit 4 to JUnit 5. Welcome to 2016.
+* v2.5.3
+  - Update slf4j dependency
+  - Update log4j2 dependency
+  - Update multiple build plugins
 * v2.5.2
   - Add deprecation warnings for countrycode and countrycodeexact fields as suggested in the upstream API. Countrycode should be used instead which is standardized.
   - Update of some plugins.
@@ -93,7 +123,7 @@ located in the test resources.
   - Default to GZIP encoding if supported by the server (#27).
 * v2.3.1:
   - Bugfix when dealing with duplicate data  (fixes #15)
-  - Add special info for  [Android setup](ANDROID.md)
+  - Add special info for  Android setup (obsolete)
 * v2.2.5:
   - Update slf4j dependency to 2.0.7.
   - Update lombok dependency to 1.8.26.

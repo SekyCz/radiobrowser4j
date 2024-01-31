@@ -16,12 +16,15 @@
 package de.sfuhrm.radiobrowser4j;
 
 import org.hamcrest.Matchers;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,11 +41,17 @@ public class RadioBrowserIT {
 
     private RadioBrowser radioBrowser;
 
-    @Before
+    @BeforeEach
     public void before() throws IOException {
         Optional<String> myEndpoint = new EndpointDiscovery(USER_CLIENT).discover();
         this.endpoint = myEndpoint.get();
-        radioBrowser = new RadioBrowser(endpoint, TIMEOUT, USER_CLIENT);
+        radioBrowser = new RadioBrowser(ConnectionParams.builder()
+                .apiUrl(endpoint).timeout(TIMEOUT).userAgent(USER_CLIENT).build());
+    }
+
+    @AfterEach
+    public void gracefulSleepInterval() throws InterruptedException {
+        Thread.sleep(1000);
     }
 
     @Test
@@ -76,8 +85,8 @@ public class RadioBrowserIT {
     @Test
     public void testListStations() throws IOException {
         Stream<Station> stream = radioBrowser.listStations();
-        long count = stream.limit(1000).count();
-        assertThat((int) count, Matchers.greaterThan(0));
+        List<Station> list = stream.limit(1000).collect(Collectors.toList());
+        assertThat(list.size(), Matchers.greaterThan(0));
     }
 
     @Test
@@ -89,10 +98,19 @@ public class RadioBrowserIT {
     }
 
     @Test
-    public void testAdvancedSearch() throws IOException {
+    public void testAdvancedSearchWithCountry() throws IOException {
         AdvancedSearch advancedSearch = AdvancedSearch.builder()
-                .country("Mexico").build();
+                .countryCode("MX").build();
         Stream<Station> stream = radioBrowser.listStationsWithAdvancedSearch(advancedSearch);
         assertThat((int) stream.count(), Matchers.greaterThan(1));
     }
+
+    @Test
+    public void testAdvancedSearchWithBitRateMin() throws IOException {
+        AdvancedSearch advancedSearch = AdvancedSearch.builder()
+                .bitrateMin(320).build();
+        Stream<Station> stream = radioBrowser.listStationsWithAdvancedSearch(advancedSearch);
+        List<Station> stations = stream.limit(1000).collect(Collectors.toList());
+        assertThat(stations.stream().filter(s -> s.getBitrate() >= 320).count(), Matchers.greaterThan(1L));
+        assertThat(stations.stream().filter(s -> s.getBitrate() < 320).count(), Matchers.equalTo(0L));    }
 }
