@@ -15,29 +15,27 @@
  */
 package de.sfuhrm.radiobrowser4j;
 
-import jakarta.ws.rs.core.MultivaluedMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Collections;
+import java.util.Map;
 
 /**
  * Parameters for search calls.
  *
  * @author Tomas Sekera
  */
+@Getter
 @Slf4j
 @ToString
 public final class SearchParameter {
     /**
      * The field name to sort by.
      */
-    @Getter
     private final SearchKey searchKey;
 
-    @Getter
     private final String searchValue;
 
     /**
@@ -53,7 +51,7 @@ public final class SearchParameter {
     /**
      * Creates a new instance.
      *
-     * @param searchKey  the search name.
+     * @param searchKey   the search name.
      * @param searchValue the search value.
      * @return a new instance.
      */
@@ -62,15 +60,15 @@ public final class SearchParameter {
     }
 
     /**
-     * Transfer this list parameter the the passed multi valued map.
+     * Transfer this list parameter the passed valued map.
      *
      * @param requestParams the target of the list params.
      */
-    void applyTo(final MultivaluedMap<String, String> requestParams) {
+    void applyTo(final Map<String, String> requestParams) {
         log.info("list={}", this);
         if (getSearchKey() != null) {
             requestParams.put(getSearchKey().name().toLowerCase(),
-                    Collections.singletonList(searchValue));
+                    searchValue);
         }
     }
 }

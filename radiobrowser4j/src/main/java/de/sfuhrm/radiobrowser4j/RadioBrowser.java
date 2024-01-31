@@ -1,18 +1,18 @@
 /*
-* Copyright 2017 Stephan Fuhrmann
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2017 Stephan Fuhrmann
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package de.sfuhrm.radiobrowser4j;
 
 import lombok.NonNull;
@@ -32,44 +32,55 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-/** API facade for the RadioBrowser.
+/**
+ * API facade for the RadioBrowser.
  * You usually create a new {@linkplain #RadioBrowser(ConnectionParams) instance}
  * and then use the methods to invoke API calls.
+ *
  * @author Stephan Fuhrmann
- * */
+ */
 @Slf4j
 public class RadioBrowser {
 
-    /** The base URL of the REST service. */
+    /**
+     * The base URL of the REST service.
+     */
     @Deprecated
     static final String DEFAULT_API_URL =
             "https://at1.api.radio-browser.info/";
 
-    /** REST implementation. */
+    /**
+     * REST implementation.
+     */
     private final RestDelegate rest;
 
     /**
      * Creates a new API client using a proxy.
+     *
      * @param connectionParams the parameters for creating an API connection.
      * @see ConnectionParams.ConnectionParamsBuilder
-     * */
+     */
     public RadioBrowser(@NonNull final ConnectionParams connectionParams) {
         connectionParams.check();
         rest = new RestDelegateImpl(connectionParams);
     }
 
-    /** Composes URI path components with '/' separators.
+    /**
+     * Composes URI path components with '/' separators.
+     *
      * @param components the components to compose.
      * @return the joint path.
-     * */
-    private static String paths(final String...components) {
+     */
+    private static String paths(final String... components) {
         return Arrays.stream(components).collect(Collectors.joining("/"));
     }
 
-    /** Retrieve a generic list containing a value/stationcount mapping.
+    /**
+     * Retrieve a generic list containing a value/stationcount mapping.
+     *
      * @param subPath the API sub path to use for the call.
      * @return map of value and stationcount pairs.
-     * */
+     */
     private Map<String, Integer> retrieveValueStationCountList(
             final String subPath) {
 
@@ -78,8 +89,8 @@ public class RadioBrowser {
                         Collections.emptyMap());
         return map.stream()
                 .collect(Collectors.toMap(
-                    m -> m.get("name"),
-                    m -> Integer.parseInt(m.get("stationcount")),
+                        m -> m.get("name"),
+                        m -> Integer.parseInt(m.get("stationcount")),
                         (a, b) -> a));
     }
 
@@ -90,36 +101,26 @@ public class RadioBrowser {
      * @param limit   count of results
      * @return map of value and stationcount pairs.
      */
-//    TODO: This has to be updated
     private Map<String, Integer> retrieveValueStationCountListOrdered(
             final String subPath,
             int limit) {
-        MultivaluedMap<String, String> requestParams =
-                new MultivaluedHashMap<>();
+        Map<String, String> requestParams =
+                new HashMap<>();
+        requestParams.put("limit", Integer.toString(limit));
+        requestParams.put("order", "stationcount");
+        requestParams.put("reverse", "true");
 
-        Entity<Form> entity = Entity.form(requestParams);
 
-        requestParams.put("limit", Collections.singletonList(
-                Integer.toString(limit)));
-        requestParams.put("order",
-                Collections.singletonList("stationcount"));
-        requestParams.put("reverse",
-                Collections.singletonList("true"));
-
-        try (Response response = builder(webTarget.path(subPath))
-                .post(entity)) {
-
-            List<Map<String, String>> map = response.readEntity(
-                    new GenericType<List<Map<String, String>>>() {
-                    });
-            checkResponseStatus(response);
-            return map.stream()
-                    .collect(Collectors.toMap(
-                            m -> m.get("name"),
-                            m -> Integer.parseInt(m.get("stationcount")),
-                            (m1, m2) -> m1));
-        }
+        List<Map<String, String>> map =
+                rest.postWithListOfMapOfString(subPath,
+                        requestParams);
+        return map.stream()
+                .collect(Collectors.toMap(
+                        m -> m.get("name"),
+                        m -> Integer.parseInt(m.get("stationcount")),
+                        (a, b) -> a));
     }
+
 
     /**
      * List the known countries.
@@ -129,8 +130,8 @@ public class RadioBrowser {
      *
      * @return a list of countries (keys) and country usages (values).
      * @see <a href="https://de1.api.radio-browser.info/#List_of_countries">
-     *     API</a>
-     * */
+     * API</a>
+     */
     public Map<String, Integer> listCountries() {
         return retrieveValueStationCountList("json/countries");
     }
@@ -163,26 +164,30 @@ public class RadioBrowser {
      *
      * @return a list of codecs (keys) and codec usages (values).
      * @see <a href="https://de1.api.radio-browser.info/#List_of_codecs">
-     *     API</a>
-     * */
+     * API</a>
+     */
     public Map<String, Integer> listCodecs() {
         return retrieveValueStationCountList("json/codecs");
     }
 
-    /** List the known languages.
+    /**
+     * List the known languages.
+     *
      * @return a list of languages (keys) and language usages (values).
      * @see <a href="https://de1.api.radio-browser.info/#List_of_languages">
-     *     API</a>
-     * */
+     * API</a>
+     */
     public Map<String, Integer> listLanguages() {
         return retrieveValueStationCountList("json/languages");
     }
 
-    /** List the known tags.
+    /**
+     * List the known tags.
+     *
      * @return a list of tags (keys) and tag usages (values).
      * @see <a href="https://de1.api.radio-browser.info/#List_of_tags">
-     *     API</a>
-     * */
+     * API</a>
+     */
     public Map<String, Integer> listTags() {
         return retrieveValueStationCountList("json/tags");
     }
@@ -198,9 +203,11 @@ public class RadioBrowser {
         return retrieveValueStationCountListOrdered("json/tags", limit);
     }
 
-    /** Get a list of all stations on a certain API path.
-     * @param paging the offset and limit of the page to retrieve.
-     * @param path the path to retrieve, for example "json/stations".
+    /**
+     * Get a list of all stations on a certain API path.
+     *
+     * @param paging    the offset and limit of the page to retrieve.
+     * @param path      the path to retrieve, for example "json/stations".
      * @param listParam the optional listing parameters.
      * @return the partial list of the stations. Can be empty for exceeding the
      * possible stations.
@@ -208,7 +215,7 @@ public class RadioBrowser {
     private List<Station> listStationsPathWithPaging(
             final Optional<Paging> paging,
             final String path,
-            final Parameter...listParam) {
+            final Parameter... listParam) {
         Map<String, String> requestParams =
                 new HashMap<>();
 
@@ -218,17 +225,19 @@ public class RadioBrowser {
         return rest.postWithListOfStation(path, requestParams);
     }
 
-    /** Get a list of all stations on a certain API path.
-     * @param limit the limit of the page to retrieve.
-     * @param path the path to retrieve, for example "json/stations".
+    /**
+     * Get a list of all stations on a certain API path.
+     *
+     * @param limit     the limit of the page to retrieve.
+     * @param path      the path to retrieve, for example "json/stations".
      * @param listParam the optional listing parameters.
      * @return the partial list of the stations. Can be empty for exceeding the
      * possible stations.
      */
     private List<Station> listStationsPathWithLimit(
-                                final Optional<Limit> limit,
-                                final String path,
-                                final Parameter...listParam) {
+            final Optional<Limit> limit,
+            final String path,
+            final Parameter... listParam) {
         Map<String, String> requestParams =
                 new HashMap<>();
 
@@ -242,32 +251,38 @@ public class RadioBrowser {
                 requestParams);
     }
 
-    /** Get a list of all stations. Will return a single batch.
-     * @param paging the offset and limit of the page to retrieve.
+    /**
+     * Get a list of all stations. Will return a single batch.
+     *
+     * @param paging    the offset and limit of the page to retrieve.
      * @param listParam the optional listing parameters.
      * @return the partial list of the stations. Can be empty for exceeding the
      * possible stations.
      */
     public List<Station> listStations(@NonNull final Paging paging,
-                                      final Parameter...listParam) {
+                                      final Parameter... listParam) {
         return listStationsPathWithPaging(Optional.of(paging),
                 "json/stations",
                 listParam);
     }
 
-    /** Get a list of all stations. Will return all
+    /**
+     * Get a list of all stations. Will return all
      * stations in a stream.
+     *
      * @param listParam the optional listing parameters.
      * @return the full stream of stations.
      */
-    public Stream<Station> listStations(final Parameter...listParam) {
+    public Stream<Station> listStations(final Parameter... listParam) {
         return StreamSupport.stream(
                 new PagingSpliterator<>(
                         p -> listStations(p, listParam)),
                 false);
     }
 
-    /** Get a list of all broken stations. Will return a single batch.
+    /**
+     * Get a list of all broken stations. Will return a single batch.
+     *
      * @param limit the limit of the page to retrieve.
      * @return the partial list of the broken stations. Can be empty
      * for exceeding the possible stations.
@@ -275,10 +290,12 @@ public class RadioBrowser {
     public List<Station> listBrokenStations(@NonNull final Limit limit) {
         return listStationsPathWithLimit(Optional.of(limit),
                 "json/stations/broken"
-                );
+        );
     }
 
-    /** Get a list of all broken stations as one continuous stream.
+    /**
+     * Get a list of all broken stations as one continuous stream.
+     *
      * @return the continuous stream of all broken stations.
      */
     public Stream<Station> listBrokenStations() {
@@ -289,7 +306,9 @@ public class RadioBrowser {
                 false);
     }
 
-    /** Get a list of the top click stations. Will return a single batch.
+    /**
+     * Get a list of the top click stations. Will return a single batch.
+     *
      * @param limit the limit of the page to retrieve.
      * @return the partial list of the top click stations.
      * Can be empty for exceeding the
@@ -300,7 +319,9 @@ public class RadioBrowser {
                 "json/stations/topclick");
     }
 
-    /** Get a stream of all top click stations.
+    /**
+     * Get a stream of all top click stations.
+     *
      * @return the complete stream of all top click stations.
      */
     public Stream<Station> listTopClickStations() {
@@ -311,7 +332,9 @@ public class RadioBrowser {
                 false);
     }
 
-    /** Get a list of the top vote stations. Will return a single batch.
+    /**
+     * Get a list of the top vote stations. Will return a single batch.
+     *
      * @param limit the limit of the page to retrieve.
      * @return the partial list of the top vote stations.
      * Can be empty for exceeding the
@@ -322,7 +345,9 @@ public class RadioBrowser {
                 "json/stations/topvote");
     }
 
-    /** Get a stream of the top vote stations.
+    /**
+     * Get a stream of the top vote stations.
+     *
      * @return the complete stream of the top vote stations.
      */
     public Stream<Station> listTopVoteStations() {
@@ -333,7 +358,9 @@ public class RadioBrowser {
                 false);
     }
 
-    /** Get a list of the last clicked stations. Will return a single batch.
+    /**
+     * Get a list of the last clicked stations. Will return a single batch.
+     *
      * @param limit the limit of the page to retrieve.
      * @return the partial list of the last clicked stations.
      * Can be empty for exceeding the
@@ -344,7 +371,9 @@ public class RadioBrowser {
                 "json/stations/lastclick");
     }
 
-    /** Get a stream of last clicked stations.
+    /**
+     * Get a stream of last clicked stations.
+     *
      * @return the complete stream of the last clicked stations.
      */
     public Stream<Station> listLastClickStations() {
@@ -355,7 +384,9 @@ public class RadioBrowser {
                 false);
     }
 
-    /** Get a list of the last changed stations. Will return a single batch.
+    /**
+     * Get a list of the last changed stations. Will return a single batch.
+     *
      * @param limit the limit of the page to retrieve.
      * @return the partial list of the last clicked stations.
      * Can be empty for exceeding the
@@ -366,7 +397,9 @@ public class RadioBrowser {
                 "json/stations/lastchange");
     }
 
-    /** Get a stream of last changed stations.
+    /**
+     * Get a stream of last changed stations.
+     *
      * @return the complete stream of the last changed stations.
      */
     public Stream<Station> listLastChangedStations() {
@@ -377,7 +410,9 @@ public class RadioBrowser {
                 false);
     }
 
-    /** Get a station referenced by its UUID.
+    /**
+     * Get a station referenced by its UUID.
+     *
      * @param uuid the UUID of the station to retrieve.
      * @return an optional containing either the station or nothing.
      * Nothing is returned if the API didn't find the station by the
@@ -395,19 +430,21 @@ public class RadioBrowser {
         }
     }
 
-    /** Get a list of stations matching a certain search criteria.
+    /**
+     * Get a list of stations matching a certain search criteria.
      * Will return a single batch.
-     * @param paging the offset and limit of the page to retrieve.
+     *
+     * @param paging     the offset and limit of the page to retrieve.
      * @param searchMode the field to match.
      * @param searchTerm the term to search for.
-     * @param listParam the optional listing parameters.
+     * @param listParam  the optional listing parameters.
      * @return the partial list of the stations. Can be empty for exceeding the
      * number of matching stations.
      */
     public List<Station> listStationsBy(@NonNull final Paging paging,
                                         @NonNull final SearchMode searchMode,
                                         @NonNull final String searchTerm,
-                                        final Parameter...listParam) {
+                                        final Parameter... listParam) {
         Map<String, String> requestParams =
                 new HashMap<>();
         paging.apply(requestParams);
@@ -421,16 +458,18 @@ public class RadioBrowser {
                 requestParams);
     }
 
-    /** Get a stream of stations matching a certain search criteria.
+    /**
+     * Get a stream of stations matching a certain search criteria.
+     *
      * @param searchMode the field to match.
      * @param searchTerm the term to search for.
-     * @param listParam the optional listing parameters.
+     * @param listParam  the optional listing parameters.
      * @return the full stream of matching stations.
      */
     public Stream<Station> listStationsBy(
             @NonNull final SearchMode searchMode,
             @NonNull final String searchTerm,
-            final Parameter...listParam) {
+            final Parameter... listParam) {
 
         Function<Paging, List<Station>> fetcher = p -> {
             Map<String, String> requestParams =
@@ -459,29 +498,24 @@ public class RadioBrowser {
      * @param searchParam    the optional search parameters.
      * @return the full stream of matching stations.
      */
-//    TODO: update to new standards
     public Stream<Station> listStationsBy(
             @NonNull final SearchMode searchMode,
             final ListParameter orderParameter,
             final SearchParameter... searchParam) {
 
         Function<Paging, List<Station>> fetcher = p -> {
-            MultivaluedMap<String, String> requestParams =
-                    new MultivaluedHashMap<>();
+            Map<String, String> requestParams =
+                    new HashMap<>();
             p.apply(requestParams);
             orderParameter.apply(requestParams);
             Arrays.stream(searchParam).forEach(l -> l.applyTo(requestParams));
-            Entity<Form> entity = Entity.form(requestParams);
 
-            try (Response response = builder(webTarget
-                    .path("json/stations")
-                    .path(searchMode.name().toLowerCase()))
-                    .post(entity)) {
 
-                checkResponseStatus(response);
-                return response.readEntity(new GenericType<List<Station>>() {
-                });
-            }
+            String path = paths("json/stations",
+                    searchMode.name().toLowerCase());
+
+            return rest.postWithListOfStation(path,
+                    requestParams);
         };
 
         return StreamSupport.stream(
@@ -498,7 +532,6 @@ public class RadioBrowser {
      * @param searchParam the optional search parameters.
      * @return the full stream of matching stations.
      */
-        //    TODO: update to new standards
     public Stream<Station> listStationsBy(
             @NonNull final SearchMode searchMode,
             final SearchParameter... searchParam) {
@@ -529,16 +562,18 @@ public class RadioBrowser {
         }
     }
 
-    /** Posts a new station to the server.
+    /**
+     * Posts a new station to the server.
      * Note: This call only transmits certain fields.
      * The fields are:
      * name, url, homepage, favicon, country, state, language and tags.
+     *
      * @param station the station to add to the REST service.
      * @return the uuid of the new station.
      * @throws RadioBrowserException if there was a problem
-     * creating the station.
+     *                               creating the station.
      * @see <a href="https://de1.api.radio-browser.info/#Add_radio_station">
-     *     The API endpoint</a>
+     * The API endpoint</a>
      */
     public UUID postNewStation(@NonNull final Station station) {
         return postNewOrEditStation(station, "json/add");
@@ -546,9 +581,10 @@ public class RadioBrowser {
 
     /**
      * Votes for a station.
+     *
      * @param stationUUID The uuid of the station to vote for.
      * @throws RadioBrowserException if there was a problem
-     * voting for the station.
+     *                               voting for the station.
      */
     public void voteForStation(@NonNull final UUID stationUUID) {
         String path = paths("json/vote",
@@ -557,22 +593,26 @@ public class RadioBrowser {
         if (!urlResponse.isOk()) {
             throw new RadioBrowserException(urlResponse.getMessage());
         }
-}
+    }
 
-    /** Get the server statistics.
+    /**
+     * Get the server statistics.
+     *
      * @return the statistics for the configured server
      * endpoint.
-     * */
+     */
     public Stats getServerStats() {
         return rest.get("json/stats", Stats.class);
     }
 
-    /** Get a stream of stations matching a certain search criteria.
+    /**
+     * Get a stream of stations matching a certain search criteria.
+     *
      * @param advancedSearch the advanced search query object.
-     *          A builder can be created by calling
-     *          {@code AdvancedSearch.builder()},
-     *          and then when you are finished
-     *          {@code AdvancedSearch.AdvancedSearchBuilder.build()}.
+     *                       A builder can be created by calling
+     *                       {@code AdvancedSearch.builder()},
+     *                       and then when you are finished
+     *                       {@code AdvancedSearch.AdvancedSearchBuilder.build()}.
      * @return the full stream of matching stations.
      */
     public Stream<Station> listStationsWithAdvancedSearch(
@@ -595,18 +635,20 @@ public class RadioBrowser {
     }
 
 
-    /** Posts a new station to the server.
+    /**
+     * Posts a new station to the server.
      * Note: This call only transmits certain fields.
      * The fields are:
      * name, url, homepage, favicon, country, state, language and tags.
+     *
      * @param station the station to add to the REST service.
-     * @param path the path of the new / edit call.
+     * @param path    the path of the new / edit call.
      * @return the {@linkplain Station#getStationUUID() id} of the new station.
      * @throws RadioBrowserException if there was a problem
-     * creating the station.
+     *                               creating the station.
      */
     private UUID postNewOrEditStation(@NonNull final Station station,
-                                        final String path) {
+                                      final String path) {
         Map<String, String> requestParams =
                 new HashMap<>();
         station.apply(requestParams);
